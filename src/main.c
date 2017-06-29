@@ -108,7 +108,7 @@ typedef struct {
 
 Paddle InitPaddle(float x, float y)
 {
-    return (Paddle){(Vector2){x, y}, (Vector2){10.f, 100.f}, (Vector2){0.f, 0.f}, 0};
+    return (Paddle){(Vector2){x, y}, (Vector2){20.f, 100.f}, (Vector2){0.f, 0.f}, 0};
 }
 
 typedef struct {
@@ -120,7 +120,7 @@ GameState InitGameState()
 {
     GameState state;
     state.ball = InitBall();
-    state.paddles[0] = InitPaddle(0.f, 300.f);
+    state.paddles[0] = InitPaddle(-10.f, 300.f);
     state.paddles[1] = InitPaddle(790.f, 300.f);
 
     return state;
@@ -143,10 +143,6 @@ Ball CheckBallWallCollision(Ball ball)
 {
     Ball newball = ball;
 
-    /* if (ball.position.x - ball.radius < 0.f || ball.position.x + ball.radius > 800.f) {
-        newball.velocity.x = -ball.velocity.x;
-    } */
-
     if (ball.position.y - ball.radius < 0.f || ball.position.y + ball.radius > 600.f) {
         newball.velocity.y = -ball.velocity.y;
     }
@@ -168,26 +164,26 @@ Ball CheckBallPaddleCollision(Ball ball, Paddle paddle)
 void NewSet(GameState* state)
 {
     state->ball = InitBall();
-    state->paddles[0].position = (Vector2){0.f, 300.f};
+    state->paddles[0].position = (Vector2){-10.f, 300.f};
     state->paddles[1].position = (Vector2){790.f, 300.f};
 }
 
 void UpdateGame(GameState* state, GLFWwindow* window)
 {
-    state->paddles[0].velocity.y = 0.f;
+    state->paddles[0].velocity.y /= 2.f;
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        state->paddles[0].velocity.y += 10.f;
+        state->paddles[0].velocity.y = 10.f;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        state->paddles[0].velocity.y -= 10.f;
+        state->paddles[0].velocity.y = -10.f;
     }
 
-    state->paddles[1].velocity.y = 0.f;
+    state->paddles[1].velocity.y /= 2.f;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        state->paddles[1].velocity.y += 10.f;
+        state->paddles[1].velocity.y = 10.f;
     }
     if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        state->paddles[1].velocity.y -= 10.f;
+        state->paddles[1].velocity.y = -10.f;
     }
 
     state->ball.position = Vector2Add(state->ball.position, state->ball.velocity);
@@ -304,15 +300,21 @@ int main()
         glUseProgram(rectangle_program);
         int position_loc = glGetUniformLocation(rectangle_program, "position");
         int size_loc = glGetUniformLocation(rectangle_program, "size");
+        int time_loc = glGetUniformLocation(rectangle_program, "time");
+        int speed_loc = glGetUniformLocation(rectangle_program, "speed");
 
         // paddle 1
         glUniform2fv(position_loc, 1, (float*)&state.paddles[0].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[0].size);
+        glUniform1f(time_loc, current_time);
+        glUniform1f(speed_loc, Vector2Length(state.paddles[0].velocity));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // paddle 2
         glUniform2fv(position_loc, 1, (float*)&state.paddles[1].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[1].size);
+        glUniform1f(time_loc, current_time);
+        glUniform1f(speed_loc, Vector2Length(state.paddles[1].velocity));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         glBindVertexArray(0);
