@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Iinclude/
 LDFLAGS =-lglfw -lGL -ldl -lm
-OBJ = main.o glad.o
+OBJ = main.o glad.o utils.o render.o
 
 all: pong
 

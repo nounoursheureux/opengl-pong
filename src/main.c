@@ -5,79 +5,13 @@
 #include <time.h>
 #define RAYMATH_IMPLEMENTATION
 #include "raymath.h"
+#include "utils.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "render.h"
 
 void error_callback(int err, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
-}
-
-char* ReadFile(const char* path)
-{
-    FILE* fp = fopen(path, "rb");
-    if (!fp) return NULL;
-
-    fseek(fp, 0, SEEK_END);
-    int size = ftell(fp) + 1;
-    rewind(fp);
-
-    char* buf = (char*)malloc(size);
-    fread(buf, 1, size, fp);
-    buf[size-1] = 0;
-
-    fclose(fp);
-    return buf;
-}
-
-unsigned int LoadShaderFromSource(int type, const char* source)
-{
-    unsigned int shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, NULL);
-    glCompileShader(shader);
-
-    int success = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        int logsize;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logsize);
-        char* infolog = (char*)malloc(logsize);
-        glGetShaderInfoLog(shader, logsize, NULL, infolog);
-        if (type == GL_VERTEX_SHADER) {
-            fprintf(stderr, "Error in vertex shader: %s\n", infolog);
-        } else if (type == GL_FRAGMENT_SHADER) {
-            fprintf(stderr, "Error in fragment shader: %s\n", infolog);
-        } else {
-            fprintf(stderr, "Error in unknown shader: %s\n", infolog);
-        }
-        return 0;
-    }    
-
-    return shader;
-}
-
-unsigned int LoadShaderFromFile(int type, const char* path)
-{
-    char* source = ReadFile(path);
-    if (!source) return 0;
-
-    unsigned int shader = LoadShaderFromSource(type, source);
-    free(source);
-
-    return shader;
-}
-
-unsigned int CreateShaderProgram(unsigned int vertex, unsigned int fragment)
-{
-    unsigned int program = glCreateProgram();
-    glAttachShader(program, vertex);
-    glAttachShader(program, fragment);
-    glLinkProgram(program);
-    
-    return program;
-}
-
-float deg2rad(int deg)
-{
-    return (float)deg * M_PI / 180.f;
 }
 
 typedef struct {
@@ -93,7 +27,7 @@ Ball InitBall()
     ball.position = (Vector2){400.f, 300.f};
     ball.radius = 5.f;
     int angle_deg = rand() % 360; // angle in degrees
-    float angle = deg2rad(angle_deg);
+    float angle = deg2rad((float)angle_deg);
     ball.velocity = (Vector2){cos(angle) * 10.f, sin(angle) * 10.f};
 
     return ball;
@@ -226,11 +160,11 @@ int main()
 
     glfwSwapInterval(1); // vsync
 
-    float vertices[4 * 3] = {
-        -1.f, -1.f, 0.f, // bottom left
-        1.f, -1.f, 0.f, // bottom right
-        1.f, 1.f, 0.f, // top right
-        -1.f, 1.f, 0.f, // top left
+    float vertices[4 * 5] = {
+        -1.f, -1.f, 0.f, 0.f, 0.f, // bottom left
+        1.f, -1.f, 0.f, 1.f, 0.f, // bottom right
+        1.f, 1.f, 0.f, 1.f, 1.f, // top right
+        -1.f, 1.f, 0.f, 0.f, 1.f, // top left
     };
 
     unsigned int indexes[6] = {
@@ -251,15 +185,22 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexes), indexes, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
     unsigned int vertex_shader = LoadShaderFromFile(GL_VERTEX_SHADER, "res/shaders/base.vs");
     unsigned int rectangle_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/rectangle.fs");
     unsigned int circle_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/circle.fs");
+    unsigned int textured_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/textured.fs");
     unsigned int rectangle_program = CreateShaderProgram(vertex_shader, rectangle_shader);
     unsigned int circle_program = CreateShaderProgram(vertex_shader, circle_shader);
+    unsigned int textured_program = CreateShaderProgram(vertex_shader, textured_shader);
+
+    stbi_set_flip_vertically_on_load(1);
+    Texture webcomic = LoadTextureFromFile("res/textures/webcomic.png");
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
 
@@ -317,8 +258,18 @@ int main()
         glUniform1f(speed_loc, Vector2Length(state.paddles[1].velocity));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
+        // draw texture
+        glBindTexture(GL_TEXTURE_2D, webcomic.id);
+        glUseProgram(textured_program);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
         glBindVertexArray(0);
         glfwSwapBuffers(window);
+
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr, "OpenGL error: %d\n", err);
+        }
     }
 
     return 0;
