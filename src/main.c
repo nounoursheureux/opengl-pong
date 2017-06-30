@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define RAYMATH_IMPLEMENTATION
-#include "raymath.h"
+// #define RAYMATH_IMPLEMENTATION
+// #include "raymath.h"
 #include "utils.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "render.h"
@@ -16,34 +16,34 @@ void error_callback(int err, const char* description)
 }
 
 typedef struct {
-    Vector2 position;
+    MiniVector2 position;
     float radius;
 
-    Vector2 velocity;
+    MiniVector2 velocity;
 } Ball;
 
 Ball InitBall()
 {
     Ball ball;
-    ball.position = (Vector2){400.f, 300.f};
+    ball.position = (MiniVector2){400.f, 300.f};
     ball.radius = 5.f;
     int angle_deg = rand() % 360; // angle in degrees
-    float angle = (float)angle_deg * DEG2RAD;
-    ball.velocity = (Vector2){cos(angle) * 10.f, sin(angle) * 10.f};
+    float angle = deg2rad((float)angle_deg);
+    ball.velocity = (MiniVector2){cos(angle) * 10.f, sin(angle) * 10.f};
 
     return ball;
 }
 
 typedef struct {
-    Vector2 position;
-    Vector2 size;
-    Vector2 velocity;
+    MiniVector2 position;
+    MiniVector2 size;
+    MiniVector2 velocity;
     unsigned int score;
 } Paddle;
 
 Paddle InitPaddle(float x, float y)
 {
-    return (Paddle){(Vector2){x, y}, (Vector2){20.f, 100.f}, (Vector2){0.f, 0.f}, 0};
+    return (Paddle){(MiniVector2){x, y}, (MiniVector2){20.f, 100.f}, (MiniVector2){0.f, 0.f}, 0};
 }
 
 typedef struct {
@@ -99,8 +99,8 @@ Ball CheckBallPaddleCollision(Ball ball, Paddle paddle)
 void NewSet(GameState* state)
 {
     state->ball = InitBall();
-    state->paddles[0].position = (Vector2){-10.f, 300.f};
-    state->paddles[1].position = (Vector2){790.f, 300.f};
+    state->paddles[0].position = (MiniVector2){-10.f, 300.f};
+    state->paddles[1].position = (MiniVector2){790.f, 300.f};
 }
 
 void UpdateGame(GameState* state, GLFWwindow* window)
@@ -121,9 +121,9 @@ void UpdateGame(GameState* state, GLFWwindow* window)
         state->paddles[1].velocity.y = -10.f;
     }
 
-    state->ball.position = Vector2Add(state->ball.position, state->ball.velocity);
-    state->paddles[0].position = Vector2Add(state->paddles[0].position, state->paddles[0].velocity);
-    state->paddles[1].position = Vector2Add(state->paddles[1].position, state->paddles[1].velocity);
+    state->ball.position = MiniVector2Add(state->ball.position, state->ball.velocity);
+    state->paddles[0].position = MiniVector2Add(state->paddles[0].position, state->paddles[0].velocity);
+    state->paddles[1].position = MiniVector2Add(state->paddles[1].position, state->paddles[1].velocity);
 
     // Collision between paddle and walls
     state->paddles[0] = CheckPaddleCollision(state->paddles[0]);
@@ -260,7 +260,7 @@ int main()
         glUniform2fv(position_loc, 1, (float*)&state.paddles[0].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[0].size);
         glUniform1f(time_loc, current_time);
-        glUniform1f(speed_loc, Vector2Length(state.paddles[0].velocity));
+        glUniform1f(speed_loc, MiniVector2Length(state.paddles[0].velocity));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // paddle 2
@@ -268,7 +268,7 @@ int main()
         glUniform2fv(position_loc, 1, (float*)&state.paddles[1].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[1].size);
         glUniform1f(time_loc, current_time);
-        glUniform1f(speed_loc, Vector2Length(state.paddles[1].velocity));
+        glUniform1f(speed_loc, MiniVector2Length(state.paddles[1].velocity));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // draw texture

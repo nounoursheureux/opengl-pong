@@ -1,5 +1,6 @@
-#ifndef PONG_MATH_H
-#define PONG_MATH_H
+#ifndef MINI_MATH_H
+#define MINI_MATH_H
+#include <math.h>
 
 typedef struct MiniVector2 {
     float x, y;
@@ -8,6 +9,21 @@ typedef struct MiniVector2 {
 typedef struct MiniMatrix {
     float data[16];
 } MiniMatrix;
+
+float deg2rad(float deg)
+{
+    return deg * M_PI / 180.f;
+}
+
+MiniVector2 MiniVector2Add(MiniVector2 a, MiniVector2 b)
+{
+    return (MiniVector2){a.x + b.x, a.y + b.y};
+}
+
+float MiniVector2Length(MiniVector2 vec)
+{
+    return sqrtf(vec.x*vec.x + vec.y*vec.y);
+}
 
 MiniMatrix MiniMatrixIdentity()
 {

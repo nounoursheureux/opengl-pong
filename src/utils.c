@@ -1,5 +1,5 @@
 #include "utils.h"
-#include <cmath>
+#include <math.h>
 
 char* ReadFile(const char* path)
 {
@@ -16,9 +16,4 @@ char* ReadFile(const char* path)
 
     fclose(fp);
     return buf;
-}
-
-float deg2rad(float deg)
-{
-    return deg * M_PI / 180.f;
 }
