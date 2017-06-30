@@ -10,6 +10,16 @@ typedef struct MiniMatrix {
     float data[16];
 } MiniMatrix;
 
+float deg2rad(float deg);
+MiniVector2 MiniVector2Add(MiniVector2 a, MiniVector2 b);
+float MiniVector2Length(MiniVector2 vec);
+MiniMatrix MiniMatrixIdentity();
+MiniMatrix MiniMatrixOrtho(float left, float right, float bottom, float top, float near, float far);
+MiniMatrix MiniMatrixMultiply(MiniMatrix left, MiniMatrix right);
+MiniMatrix MiniMatrixScale(float x, float y, float z);
+MiniMatrix MiniMatrixTranslate(float x, float y, float z);
+
+
 float deg2rad(float deg)
 {
     return deg * M_PI / 180.f;
@@ -112,6 +122,16 @@ MiniMatrix MiniMatrixScale(float x, float y, float z)
     mat.data[0] = x;
     mat.data[5] = y;
     mat.data[10] = z;
+
+    return mat;
+}
+
+MiniMatrix MiniMatrixTranslate(float x, float y, float z)
+{
+    MiniMatrix mat = MiniMatrixIdentity();
+    mat.data[12] = x;
+    mat.data[13] = y;
+    mat.data[14] = z;
 
     return mat;
 }

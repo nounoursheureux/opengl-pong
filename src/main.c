@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-// #define RAYMATH_IMPLEMENTATION
-// #include "raymath.h"
 #include "utils.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "render.h"
@@ -216,8 +214,8 @@ int main()
 
     MiniMatrix proj = MiniMatrixOrtho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
     MiniMatrix view = MiniMatrixIdentity();
-    MiniMatrix model = MiniMatrixScale(1280.f, 549.f, 1.f);
-    MiniMatrix mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
+    /* MiniMatrix model = MiniMatrixScale(1280.f, 549.f, 1.f);
+    MiniMatrix mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model); */
 
     while (!glfwWindowShouldClose(window))
     {
@@ -238,6 +236,9 @@ int main()
         glBindVertexArray(vao);
 
         // draw ball
+        MiniMatrix model = MiniMatrixMultiply(MiniMatrixTranslate(state.ball.position.x - state.ball.radius, state.ball.position.y - state.ball.radius, 0.f), MiniMatrixScale(state.ball.radius * 2.f, state.ball.radius * 2.f, 1.f));
+        MiniMatrix mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
+
         glUseProgram(circle_program);
         int mvp_loc = glGetUniformLocation(circle_program, "mvp");
         int center_loc = glGetUniformLocation(circle_program, "center");
@@ -256,6 +257,8 @@ int main()
         int speed_loc = glGetUniformLocation(rectangle_program, "speed");
 
         // paddle 1
+        model = MiniMatrixMultiply(MiniMatrixTranslate(state.paddles[0].position.x, state.paddles[0].position.y, 0.f), MiniMatrixScale(state.paddles[0].size.x + 20.f, state.paddles[0].size.y, 1.f));
+        mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         glUniform2fv(position_loc, 1, (float*)&state.paddles[0].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[0].size);
@@ -264,6 +267,8 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // paddle 2
+        model = MiniMatrixMultiply(MiniMatrixTranslate(state.paddles[1].position.x - 20.f, state.paddles[1].position.y, 0.f), MiniMatrixScale(state.paddles[1].size.x + 20.f, state.paddles[1].size.y, 1.f));
+        mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         glUniform2fv(position_loc, 1, (float*)&state.paddles[1].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[1].size);
@@ -272,11 +277,11 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // draw texture
-        glBindTexture(GL_TEXTURE_2D, webcomic.id);
+        /* glBindTexture(GL_TEXTURE_2D, webcomic.id);
         glUseProgram(textured_program);
         mvp_loc = glGetUniformLocation(textured_program, "mvp");
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0); */
 
         glBindVertexArray(0);
         glfwSwapBuffers(window);
