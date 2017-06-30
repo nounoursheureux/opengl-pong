@@ -1,6 +1,6 @@
-CC = gcc
+CC = clang
 CFLAGS = -Wall -Iinclude/
-LDFLAGS =-lglfw -lGL -ldl -lm
+LDFLAGS =-lglfw -lGL -ldl -lm -lgraphene-1.0
 OBJ = main.o glad.o utils.o render.o
 
 all: pong

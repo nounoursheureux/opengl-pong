@@ -8,6 +8,7 @@
 #include "utils.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "render.h"
+#include "minimath.h"
 
 void error_callback(int err, const char* description)
 {
@@ -27,7 +28,7 @@ Ball InitBall()
     ball.position = (Vector2){400.f, 300.f};
     ball.radius = 5.f;
     int angle_deg = rand() % 360; // angle in degrees
-    float angle = deg2rad((float)angle_deg);
+    float angle = (float)angle_deg * DEG2RAD;
     ball.velocity = (Vector2){cos(angle) * 10.f, sin(angle) * 10.f};
 
     return ball;
@@ -158,13 +159,15 @@ int main()
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+    glViewport(0, 0, window_width, window_height);
+
     glfwSwapInterval(1); // vsync
 
     float vertices[4 * 5] = {
-        -1.f, -1.f, 0.f, 0.f, 0.f, // bottom left
-        1.f, -1.f, 0.f, 1.f, 0.f, // bottom right
+        0.f, 0.f, 0.f, 0.f, 0.f, // bottom left
+        1.f, 0.f, 0.f, 1.f, 0.f, // bottom right
         1.f, 1.f, 0.f, 1.f, 1.f, // top right
-        -1.f, 1.f, 0.f, 0.f, 1.f, // top left
+        0.f, 1.f, 0.f, 0.f, 1.f, // top left
     };
 
     unsigned int indexes[6] = {
@@ -211,6 +214,11 @@ int main()
     double last_frame = glfwGetTime();
     double elapsed = 0.0;
 
+    MiniMatrix proj = MiniMatrixOrtho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
+    MiniMatrix view = MiniMatrixIdentity();
+    MiniMatrix model = MiniMatrixScale(1280.f, 549.f, 1.f);
+    MiniMatrix mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -231,20 +239,24 @@ int main()
 
         // draw ball
         glUseProgram(circle_program);
+        int mvp_loc = glGetUniformLocation(circle_program, "mvp");
         int center_loc = glGetUniformLocation(circle_program, "center");
         int radius_loc = glGetUniformLocation(circle_program, "radius");
+        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         glUniform2fv(center_loc, 1, (float*)&state.ball.position);
         glUniform1f(radius_loc, state.ball.radius);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // draw paddles
         glUseProgram(rectangle_program);
+        mvp_loc = glGetUniformLocation(rectangle_program, "mvp");
         int position_loc = glGetUniformLocation(rectangle_program, "position");
         int size_loc = glGetUniformLocation(rectangle_program, "size");
         int time_loc = glGetUniformLocation(rectangle_program, "time");
         int speed_loc = glGetUniformLocation(rectangle_program, "speed");
 
         // paddle 1
+        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         glUniform2fv(position_loc, 1, (float*)&state.paddles[0].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[0].size);
         glUniform1f(time_loc, current_time);
@@ -252,6 +264,7 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // paddle 2
+        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         glUniform2fv(position_loc, 1, (float*)&state.paddles[1].position);
         glUniform2fv(size_loc, 1, (float*)&state.paddles[1].size);
         glUniform1f(time_loc, current_time);
@@ -261,6 +274,8 @@ int main()
         // draw texture
         glBindTexture(GL_TEXTURE_2D, webcomic.id);
         glUseProgram(textured_program);
+        mvp_loc = glGetUniformLocation(textured_program, "mvp");
+        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         glBindVertexArray(0);

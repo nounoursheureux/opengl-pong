@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <cmath>
 
 char* ReadFile(const char* path)
 {
