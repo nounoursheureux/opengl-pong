@@ -117,13 +117,13 @@ Font LoadFontFromMemory(unsigned char* data, int size)
     for (int i = 0; i < strlen(codepoints); i++)
     {
         int codepoint = (int)codepoints[i];
-        int width, height, advance, lsb;
+        int width, height, xoffset, yoffset, advance, lsb;
         if (!stbtt_FindGlyphIndex(&font, codepoint)) {
             fprintf(stderr, "Codepoint not found in font: U+%04x\n", codepoint);
             continue;
         }
 
-        bitmaps[i] = stbtt_GetCodepointBitmap(&font, 0, scale, codepoint, &width, &height, 0, 0);
+        bitmaps[i] = stbtt_GetCodepointBitmap(&font, 0, scale, codepoint, &width, &height, &xoffset, &yoffset);
         stbtt_GetCodepointHMetrics(&font, codepoint, &advance, &lsb);
         if (height > total_height) {
             total_height = height;
@@ -132,14 +132,16 @@ Font LoadFontFromMemory(unsigned char* data, int size)
 
         glyphs[i].codepoint = codepoint;
         if (i == 0) {
-            glyphs[i].xoffset = 0;
+            glyphs[i].texture_rect.x = 0;
         } else {
-            glyphs[i].xoffset = glyphs[i-1].xoffset + glyphs[i-1].width;
+            glyphs[i].texture_rect.x = glyphs[i-1].texture_rect.x + glyphs[i-1].texture_rect.w;
         }
-        glyphs[i].yoffset = 0;
-        glyphs[i].width = width;
-        glyphs[i].height = height;
-        glyphs[i].advance = (float)advance * scale;
+        glyphs[i].texture_rect.y = 0;
+        glyphs[i].texture_rect.w = width;
+        glyphs[i].texture_rect.h = height;
+        glyphs[i].xoffset = xoffset;
+        glyphs[i].yoffset = yoffset;
+        glyphs[i].advance = advance * scale;
         glyphs[i].lsb = (float)lsb * scale;
     }
 
@@ -157,18 +159,18 @@ Font LoadFontFromMemory(unsigned char* data, int size)
     {
         Glyph glyph = glyphs[i];
         unsigned char* bitmap = bitmaps[i];
-        unsigned char* flipped = (unsigned char*)malloc(glyph.width * glyph.height * 4);
-        for (int y = 0; y < glyph.height; y++)
+        unsigned char* flipped = (unsigned char*)malloc(glyph.texture_rect.w * glyph.texture_rect.h * 4);
+        for (int y = 0; y < glyph.texture_rect.h; y++)
         {
-            for (int x = 0; x < glyph.width; x++)
+            for (int x = 0; x < glyph.texture_rect.w; x++)
             {
-                flipped[4 * (y*glyph.width + x)] = 255;
-                flipped[4 * (y*glyph.width + x) + 1] = 255;
-                flipped[4 * (y*glyph.width + x) + 2] = 255;
-                flipped[4 * (y*glyph.width + x) + 3] = bitmap[(glyph.height-1-y)*glyph.width + x];
+                flipped[4 * (y*glyph.texture_rect.w + x)] = 255;
+                flipped[4 * (y*glyph.texture_rect.w + x) + 1] = 255;
+                flipped[4 * (y*glyph.texture_rect.w + x) + 2] = 255;
+                flipped[4 * (y*glyph.texture_rect.w + x) + 3] = bitmap[(glyph.texture_rect.h-1-y)*glyph.texture_rect.w + x];
             }
         }
-        glTexSubImage2D(GL_TEXTURE_2D, 0, glyph.xoffset, glyph.yoffset, glyph.width, glyph.height, GL_RGBA, GL_UNSIGNED_BYTE, flipped);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, glyph.texture_rect.x, glyph.texture_rect.y, glyph.texture_rect.w, glyph.texture_rect.h, GL_RGBA, GL_UNSIGNED_BYTE, flipped);
 
         stbtt_FreeBitmap(bitmap, NULL);
         free(flipped);
@@ -228,14 +230,15 @@ void DrawText(Font font, const char* text, float x, float y)
 
         // calculate coords on screen
         offset.x += glyph.lsb;
+        offset.x = roundf(offset.x);
         MiniVector2 glyph_position = MiniVector2Add(position, offset);
-        
+
         // calculate tex coords
         float newvertices[4 * 5] = {
-            0.f, 0.f, 0.f, (float)glyph.xoffset / (float)font.texture.width, (float)glyph.yoffset / (float)font.texture.height, // bottom left
-            1.f, 0.f, 0.f, (float)(glyph.xoffset + glyph.width) / (float)font.texture.width, (float)glyph.yoffset / (float)font.texture.height, // bottom right
-            1.f, 1.f, 0.f, (float)(glyph.xoffset + glyph.width) / (float)font.texture.width, (float)(glyph.yoffset + glyph.height) / (float)font.texture.height, // top right
-            0.f, 1.f, 0.f, (float)glyph.xoffset / (float)font.texture.width, (float)(glyph.yoffset + glyph.height) / (float)font.texture.height, // top left
+            0.f, 0.f, 0.f, (float)glyph.texture_rect.x / (float)font.texture.width, (float)glyph.texture_rect.y / (float)font.texture.height, // bottom left
+            1.f, 0.f, 0.f, (float)(glyph.texture_rect.x + glyph.texture_rect.w) / (float)font.texture.width, (float)glyph.texture_rect.y / (float)font.texture.height, // bottom right
+            1.f, 1.f, 0.f, (float)(glyph.texture_rect.x + glyph.texture_rect.w) / (float)font.texture.width, (float)(glyph.texture_rect.y + glyph.texture_rect.h) / (float)font.texture.height, // top right
+            0.f, 1.f, 0.f, (float)glyph.texture_rect.x / (float)font.texture.width, (float)(glyph.texture_rect.y + glyph.texture_rect.h) / (float)font.texture.height, // top left
         };
         glBufferData(GL_ARRAY_BUFFER, sizeof(newvertices), newvertices, GL_DYNAMIC_DRAW);
         offset.x += glyph.advance;
@@ -244,7 +247,7 @@ void DrawText(Font font, const char* text, float x, float y)
         }
 
         // upload uniforms
-        MiniMatrix model = MiniMatrixMultiply(MiniMatrixTranslate(glyph_position.x, glyph_position.y, 0.f), MiniMatrixScale(glyph.width, glyph.height, 1.f));
+        MiniMatrix model = MiniMatrixMultiply(MiniMatrixTranslate(glyph_position.x + (float)glyph.xoffset, glyph_position.y - (float)(glyph.yoffset + glyph.texture_rect.h), 0.f), MiniMatrixScale(glyph.texture_rect.w, glyph.texture_rect.h, 1.f));
         MiniMatrix mvp = MiniMatrixMultiply(render_state.projview, model);
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         
@@ -261,6 +264,7 @@ void DrawText(Font font, const char* text, float x, float y)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     // TODO: one VAO for text, one VAO for sprites
+    // or instanced rendering
 }
 
 void SetProjViewMatrix(MiniMatrix mat)

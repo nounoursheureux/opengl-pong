@@ -10,6 +10,14 @@ typedef struct MiniMatrix {
     float data[16];
 } MiniMatrix;
 
+typedef struct MiniRect {
+    float x, y, w, h;
+} MiniRect;
+
+typedef struct MiniRecti {
+    int x, y, w, h;
+} MiniRecti;
+
 float deg2rad(float deg);
 MiniVector2 MiniVector2Add(MiniVector2 a, MiniVector2 b);
 float MiniVector2Length(MiniVector2 vec);

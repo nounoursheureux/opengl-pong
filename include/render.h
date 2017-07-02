@@ -11,11 +11,10 @@ typedef struct Texture {
 
 typedef struct Glyph {
     int codepoint;
+    MiniRecti texture_rect; // in pixels, not normalized
     int xoffset;
     int yoffset;
-    int width;
-    int height;
-    int advance;
+    float advance;
     int lsb;
 } Glyph;
 

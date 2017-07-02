@@ -306,7 +306,7 @@ int main()
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
-        DrawText(fira, "Hello World AV Ty ij", 0.f, 0.f);
+        DrawText(fira, "Hello World AV Ty ij", 100.f, 100.f);
 
         glBindVertexArray(0);
         glfwSwapBuffers(window);
