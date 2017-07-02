@@ -6,6 +6,7 @@
 #include "utils.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "render.h"
+#define MINIMATH_IMPLEMENTATION
 #include "minimath.h"
 
 void error_callback(int err, const char* description)
@@ -215,8 +216,11 @@ int main()
     unsigned int textured_program = CreateShaderProgram(vertex_shader, textured_shader);
 
     stbi_set_flip_vertically_on_load(1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Font fira = LoadFontFromFile("res/fonts/FiraSans-Regular.ttf", 64);
+    Font fira = LoadFontFromFile("res/fonts/DejaVuSerif.ttf", 64);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
 
@@ -229,6 +233,7 @@ int main()
 
     MiniMatrix proj = MiniMatrixOrtho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
     MiniMatrix view = MiniMatrixIdentity();
+    SetProjViewMatrix(MiniMatrixMultiply(proj, view));
     /* MiniMatrix model = MiniMatrixScale(1280.f, 549.f, 1.f);
     MiniMatrix mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model); */
 
@@ -292,13 +297,16 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // score
-        glUseProgram(textured_program);
+        // glUseProgram(textured_program);
+        BeginShader(textured_program);
         glBindTexture(GL_TEXTURE_2D, fira.texture.id);
         mvp_loc = glGetUniformLocation(textured_program, "mvp");
         model = MiniMatrixScale(fira.texture.width, fira.texture.height, 1.f);
         mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
+        DrawText(fira, "Hello World AV Ty ij", 0.f, 0.f);
 
         glBindVertexArray(0);
         glfwSwapBuffers(window);

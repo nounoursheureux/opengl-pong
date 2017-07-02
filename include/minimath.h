@@ -18,8 +18,9 @@ MiniMatrix MiniMatrixOrtho(float left, float right, float bottom, float top, flo
 MiniMatrix MiniMatrixMultiply(MiniMatrix left, MiniMatrix right);
 MiniMatrix MiniMatrixScale(float x, float y, float z);
 MiniMatrix MiniMatrixTranslate(float x, float y, float z);
+#endif // MINI_MATH_H
 
-
+#ifdef MINIMATH_IMPLEMENTATION
 float deg2rad(float deg)
 {
     return deg * M_PI / 180.f;
@@ -135,4 +136,4 @@ MiniMatrix MiniMatrixTranslate(float x, float y, float z)
 
     return mat;
 }
-#endif
+#endif // MINIMATH_IMPLEMENTATION

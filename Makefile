@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Iinclude/
+CFLAGS = -Wall -Iinclude/ -g
 LDFLAGS =-lglfw -lGL -ldl -lm
 OBJ = main.o glad.o utils.o render.o
 
