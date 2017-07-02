@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char* ReadFile(const char* path);
+unsigned char* ReadFile(const char* path);
 // float deg2rad(float deg);
 
 #endif

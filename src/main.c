@@ -13,6 +13,20 @@ void error_callback(int err, const char* description)
     fprintf(stderr, "Error: %s\n", description);
 }
 
+const char* gl_error_to_string(int err)
+{
+    switch (err) {
+        case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
+        case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
+        case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+        // case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";
+        // case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW";
+        case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
+        // case GL_CONTEXT_LOST: return "GL_CONTEXT_LOST";
+        default: return "Unknown error code";
+    }
+}
+
 typedef struct {
     MiniVector2 position;
     float radius;
@@ -201,7 +215,8 @@ int main()
     unsigned int textured_program = CreateShaderProgram(vertex_shader, textured_shader);
 
     stbi_set_flip_vertically_on_load(1);
-    Texture webcomic = LoadTextureFromFile("res/textures/webcomic.png");
+
+    Font fira = LoadFontFromFile("res/fonts/FiraSans-Regular.ttf", 64);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
 
@@ -276,19 +291,21 @@ int main()
         glUniform1f(speed_loc, MiniVector2Length(state.paddles[1].velocity));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
-        // draw texture
-        /* glBindTexture(GL_TEXTURE_2D, webcomic.id);
+        // score
         glUseProgram(textured_program);
+        glBindTexture(GL_TEXTURE_2D, fira.texture.id);
         mvp_loc = glGetUniformLocation(textured_program, "mvp");
+        model = MiniMatrixScale(fira.texture.width, fira.texture.height, 1.f);
+        mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
         glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0); */
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         glBindVertexArray(0);
         glfwSwapBuffers(window);
 
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr, "OpenGL error: %d\n", err);
+            fprintf(stderr, "%s\n", gl_error_to_string(err));
         }
     }
 

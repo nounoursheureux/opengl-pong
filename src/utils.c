@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <math.h>
 
-char* ReadFile(const char* path)
+unsigned char* ReadFile(const char* path)
 {
     FILE* fp = fopen(path, "rb");
     if (!fp) return NULL;
@@ -10,7 +10,7 @@ char* ReadFile(const char* path)
     int size = ftell(fp) + 1;
     rewind(fp);
 
-    char* buf = (char*)malloc(size);
+    unsigned char* buf = (unsigned char*)malloc(size);
     fread(buf, 1, size, fp);
     buf[size-1] = 0;
 
