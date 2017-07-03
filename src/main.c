@@ -219,10 +219,10 @@ int main()
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
-    unsigned int vertex_shader = LoadShaderFromFile(GL_VERTEX_SHADER, "res/shaders/base.vs");
-    unsigned int rectangle_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/rectangle.fs");
-    unsigned int circle_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/circle.fs");
-    unsigned int textured_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/textured.fs");
+    unsigned int vertex_shader = LoadShaderFromFile(GL_VERTEX_SHADER, "res/shaders/base.vert");
+    unsigned int rectangle_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/rectangle.frag");
+    unsigned int circle_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/circle.frag");
+    unsigned int textured_shader = LoadShaderFromFile(GL_FRAGMENT_SHADER, "res/shaders/textured.frag");
     unsigned int rectangle_program = CreateShaderProgram(vertex_shader, rectangle_shader);
     unsigned int circle_program = CreateShaderProgram(vertex_shader, circle_shader);
     unsigned int textured_program = CreateShaderProgram(vertex_shader, textured_shader);
