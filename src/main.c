@@ -250,8 +250,6 @@ int main()
     MiniMatrix proj = MiniMatrixOrtho(0.f, 800.f, 0.f, 600.f, -1.f, 1.f);
     MiniMatrix view = MiniMatrixIdentity();
     SetProjViewMatrix(MiniMatrixMultiply(proj, view));
-    /* MiniMatrix model = MiniMatrixScale(1280.f, 549.f, 1.f);
-    MiniMatrix mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model); */
 
     while (!glfwWindowShouldClose(window))
     {
