@@ -36,10 +36,12 @@ void EndShader();
 // Textures
 Texture LoadTextureFromFile(const char* path);
 Texture LoadTextureFromMemory(unsigned char* data, int width, int height);
+void UnloadTexture(Texture texture);
 
 // Fonts/Text
 Font LoadFontFromFile(const char* path, int size);
 Font LoadFontFromMemory(unsigned char* data, int size);
+void UnloadFont(Font font);
 void DrawText(Font font, const char* text, float x, float y);
 
 void SetProjViewMatrix(MiniMatrix mat);

@@ -100,6 +100,11 @@ Texture LoadTextureFromFile(const char* path)
     return tex;
 }
 
+void UnloadTexture(Texture texture)
+{
+    glDeleteTextures(1, &texture.id);
+}
+
 Font LoadFontFromMemory(unsigned char* data, int size)
 {
     stbtt_fontinfo font;
@@ -107,7 +112,7 @@ Font LoadFontFromMemory(unsigned char* data, int size)
         fprintf(stderr, "Failed to load font");
         return (Font){0};
     }
-    const char* codepoints = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789!";
+    const char* codepoints = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789!?:";
     int total_width = 0;
     int total_height = 0;
     float scale = stbtt_ScaleForPixelHeight(&font, size);
@@ -196,8 +201,15 @@ Font LoadFontFromFile(const char* path, int size)
         fprintf(stderr, "ERROR: Failed to load font: %s\n", path);
         return (Font){0};
     }
+    Font font = LoadFontFromMemory(data, size);
+    free(data);
+    return font;
+}
 
-    return LoadFontFromMemory(data, size);
+void UnloadFont(Font font)
+{
+    UnloadTexture(font.texture);
+    free(font.glyphs);
 }
 
 void DrawText(Font font, const char* text, float x, float y)
@@ -254,6 +266,7 @@ void DrawText(Font font, const char* text, float x, float y)
         // draw elements
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
+    free(indices);
 
     float vertices[4 * 5] = {
         0.f, 0.f, 0.f, 0.f, 0.f, // bottom left

@@ -40,8 +40,11 @@ Ball InitBall()
     Ball ball;
     ball.position = (MiniVector2){400.f, 300.f};
     ball.radius = 5.f;
-    int angle_deg = rand() % 360; // angle in degrees
-    float angle = deg2rad((float)angle_deg);
+    float angle;
+    do {
+        int angle_deg = rand() % 360; // angle in degrees
+        angle = deg2rad((float)angle_deg);
+    } while (fabs(cos(angle)) < 0.7f);
     ball.velocity = (MiniVector2){cos(angle) * 10.f, sin(angle) * 10.f};
 
     return ball;
@@ -52,11 +55,18 @@ typedef struct {
     MiniVector2 size;
     MiniVector2 velocity;
     unsigned int score;
+    char score_string[10];
 } Paddle;
 
 Paddle InitPaddle(float x, float y)
 {
-    return (Paddle){(MiniVector2){x, y}, (MiniVector2){20.f, 100.f}, (MiniVector2){0.f, 0.f}, 0};
+    Paddle paddle;
+    paddle.position = (MiniVector2){x, y};
+    paddle.size = (MiniVector2){20.f, 100.f};
+    paddle.velocity = (MiniVector2){0.f, 0.f};
+    paddle.score = 0;
+    strncpy(paddle.score_string, "Score: 0", 10);
+    return paddle;
 }
 
 typedef struct {
@@ -149,9 +159,11 @@ void UpdateGame(GameState* state, GLFWwindow* window)
 
     if (state->ball.position.x < 0) {
         state->paddles[1].score++;
+        snprintf(state->paddles[1].score_string, 10, "Score: %u", state->paddles[1].score);
         NewSet(state);
     } else if (state->ball.position.x > 800.f) {
         state->paddles[0].score++;
+        snprintf(state->paddles[0].score_string, 10, "Score: %u", state->paddles[0].score);
         NewSet(state);
     }
 }
@@ -214,13 +226,17 @@ int main()
     unsigned int rectangle_program = CreateShaderProgram(vertex_shader, rectangle_shader);
     unsigned int circle_program = CreateShaderProgram(vertex_shader, circle_shader);
     unsigned int textured_program = CreateShaderProgram(vertex_shader, textured_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(rectangle_shader);
+    glDeleteShader(circle_shader);
+    glDeleteShader(textured_shader);
 
     stbi_set_flip_vertically_on_load(1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Font fira = LoadFontFromFile("res/fonts/DejaVuSerif.ttf", 64);
+    Font m5x7 = LoadFontFromFile("res/fonts/m5x7.ttf", 32);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
 
@@ -297,16 +313,9 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
         // score
-        // glUseProgram(textured_program);
         BeginShader(textured_program);
-        glBindTexture(GL_TEXTURE_2D, fira.texture.id);
-        mvp_loc = glGetUniformLocation(textured_program, "mvp");
-        model = MiniMatrixScale(fira.texture.width, fira.texture.height, 1.f);
-        mvp = MiniMatrixMultiply(MiniMatrixMultiply(proj, view), model);
-        glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, mvp.data);
-        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
-
-        DrawText(fira, "Hello World AV Ty ij", 100.f, 100.f);
+        DrawText(m5x7, state.paddles[0].score_string, 50.f, 550.f);
+        DrawText(m5x7, state.paddles[1].score_string, 650.f, 550.f);
 
         glBindVertexArray(0);
         glfwSwapBuffers(window);
@@ -317,5 +326,12 @@ int main()
         }
     }
 
+    UnloadFont(m5x7);
+    glDeleteProgram(rectangle_program);
+    glDeleteProgram(circle_program);
+    glDeleteProgram(textured_program);
+    glDeleteBuffers(1, &ebo);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &vao);
     return 0;
 }
