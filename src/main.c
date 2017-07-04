@@ -113,8 +113,18 @@ Ball CheckBallPaddleCollision(Ball ball, Paddle paddle)
     Ball newball = ball;
 
     if (ball.position.x > paddle.position.x && ball.position.x < paddle.position.x + paddle.size.x && ball.position.y > paddle.position.y && ball.position.y < paddle.position.y + paddle.size.y) {
-        newball.velocity.x = -ball.velocity.x;
+
+        float distanceToCenter = ball.position.y - (paddle.position.y + paddle.size.y / 2);
+        float angle = distanceToCenter / 50.f * M_PI / 4.f;
+        if (ball.velocity.x < 0) {
+            newball.velocity.x = cos(angle) * 10.f;
+            newball.velocity.y = sin(angle) * 10.f;
+        } else {
+            newball.velocity.x = -cos(angle) * 10.f;
+            newball.velocity.y = sin(angle) * 10.f;
+        }
     }
+
 
     return newball;
 }
